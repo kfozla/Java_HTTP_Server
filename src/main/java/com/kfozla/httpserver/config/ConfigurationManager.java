@@ -10,15 +10,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class ConfigurationManager {
-    private static ConfigurationManager myConfigurationManager;
-    private static Configuration myCurrentConfiguration;
+    private static ConfigurationManager configurationManager;
+    private static Configuration currentConfiguration;
     private ConfigurationManager(){
     }
     public static ConfigurationManager getInstance(){
-        if (myConfigurationManager==null) {
-            myConfigurationManager = new ConfigurationManager();
+        if (configurationManager==null) {
+            configurationManager = new ConfigurationManager();
         }
-        return myConfigurationManager;
+        return configurationManager;
     }
     //load a config file
     public void loadConfigurationFile(String filepath)  {
@@ -45,7 +45,7 @@ public class ConfigurationManager {
             throw new HttpConfigurationException("Error while parsing configuration file",e);
         }
         try {
-            myCurrentConfiguration= Json.fromJson(config,Configuration.class);
+            currentConfiguration= Json.fromJson(config,Configuration.class);
         } catch (JsonProcessingException e) {
             throw new HttpConfigurationException("Error while parsing configuration file, internal",e);
         }
@@ -53,9 +53,9 @@ public class ConfigurationManager {
     }
 
     public static Configuration getCurrentConfiguration() {
-        if(myCurrentConfiguration==null){
+        if(currentConfiguration==null){
             throw new HttpConfigurationException("No current configuration is available");
         }
-        return  myCurrentConfiguration;
+        return  currentConfiguration;
     }
 }
