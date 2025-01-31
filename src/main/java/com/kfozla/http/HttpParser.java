@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HttpParser {
     private final static Logger LOGGER= LoggerFactory.getLogger(HttpParser.class);
@@ -21,7 +24,11 @@ public class HttpParser {
         }catch (IOException e){
            throw new RuntimeException(e);
         }
-        parseHeaders(inputStreamReader,httpRequest);
+        try {
+            parseHeaders(inputStreamReader,httpRequest);
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
         parseBody(inputStreamReader,httpRequest);
 
         return httpRequest;
@@ -74,7 +81,47 @@ public class HttpParser {
             }
         }
     }
-    private void parseHeaders(InputStreamReader inputStreamReader, HttpRequest httpRequest) {
+    private void parseHeaders(InputStreamReader inputStreamReader, HttpRequest httpRequest) throws IOException, HttpParsingException {
+        int bit;
+        StringBuilder processingDataBuffer = new StringBuilder();
+        boolean crlfFound = false;
+        while ((bit = inputStreamReader.read()) >=0){
+            if (bit == CR){
+                bit= inputStreamReader.read();
+                if (bit == LF){
+                    if (!crlfFound){
+                        crlfFound=true;
+
+                        processSingleHeaderField(processingDataBuffer, httpRequest);
+                        processingDataBuffer.delete(0,processingDataBuffer.length());
+                    }else{
+                        //Two crlf received, end of header
+                    }
+                }
+                else {
+                    throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+                }
+            }
+            else{
+                crlfFound=false;
+                processingDataBuffer.append((char) bit);
+                //TODO APPEND BUFFER
+            }
+        }
+    }
+
+    private void processSingleHeaderField(StringBuilder processingDataBuffer, HttpRequest httpRequest) throws HttpParsingException {
+        String rawHeader = processingDataBuffer.toString();
+        Pattern pattern =Pattern.compile("^(?<fieldName>[^:]+):\\s?(?<fieldValue>.*)$");
+        Matcher matcher=pattern.matcher(rawHeader);
+        if (matcher.matches()){
+            String fieldName = matcher.group("fieldName").trim();
+            String fieldValue = matcher.group("fieldValue").trim();
+
+            httpRequest.addHeader(fieldName, fieldValue);
+        }else {
+            throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+        }
     }
 
     private void parseBody(InputStreamReader inputStreamReader, HttpRequest httpRequest) {

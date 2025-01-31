@@ -1,11 +1,15 @@
 package com.kfozla.http;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Set;
+
 public class HttpRequest extends HttpMessage{
     private HttpMethod method;
     private String requestTarget;
     private String originalHttpVersion;//literal form
     private HttpVersion bestVersion;
-
+    private HashMap<String,String> headers = new HashMap<>();
     HttpRequest(){
     }
 
@@ -46,5 +50,15 @@ public class HttpRequest extends HttpMessage{
         if (this.bestVersion == null){
             throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_505_HTTP_VERSION_NOT_SUPPORTED);
         }
+    }
+     void addHeader(String headerName,String headerField){
+        headers.put(headerName,headerField);
+    }
+
+    public Set<String> getHeaderNames() {
+        return headers.keySet();
+    }
+    public String getHeader(String headerName){
+        return headers.get(headerName);
     }
 }
