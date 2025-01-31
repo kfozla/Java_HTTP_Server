@@ -23,6 +23,7 @@ public class HttpConnectionWorker extends Thread{
              inputStream = socket.getInputStream();
              outputStream = socket.getOutputStream();
 
+
             String html = "<html><head><title>Simple Http Server</title></head><body><h1>Simple Java HTTP Server</h1></body></html>";
             final String crlf = "\n\r";
             String response = "HTTP/1.1 200 OK" + crlf +
