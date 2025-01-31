@@ -37,7 +37,17 @@ public class HttpParser {
                 bit= inputStreamReader.read();
                 if (bit == LF){
                     LOGGER.debug("Request Line Version to Process:{}", processingDataBuffer.toString());
-                   return;
+                    if (!methodParsed || !requestTargetParsed){
+                        throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+                    }
+                    try {
+                        httpRequest.setHttpVersion(processingDataBuffer.toString());
+                    } catch (BadHttpVersionException e) {
+                        throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+                    }
+                    return;
+                }else {
+                    throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
                 }
             }
             if (bit == SP) {
@@ -47,12 +57,20 @@ public class HttpParser {
                     methodParsed=true;
                 } else if (!requestTargetParsed) {
                     LOGGER.debug("Request Line Target to Process:{}", processingDataBuffer.toString());
+                    httpRequest.setRequestTarget(processingDataBuffer.toString());
                     requestTargetParsed=true;
+                } else {
+                    throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
                 }
                 processingDataBuffer.delete(0,processingDataBuffer.length());
                 //TODO Process previous data
             }else {
                 processingDataBuffer.append((char) bit);
+                if (!methodParsed){
+                    if (processingDataBuffer.length() > HttpMethod.MAX_LENGTH){
+                        throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_501_NOT_IMPLEMENTED);
+                    }
+                }
             }
         }
     }
