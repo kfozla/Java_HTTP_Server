@@ -8,8 +8,6 @@ import com.kfozla.httpserver.core.io.WebRootHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.IIOException;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,24 +32,12 @@ public class HttpConnectionWorker extends Thread{
              inputStream = socket.getInputStream();
              outputStream = socket.getOutputStream();
 
-
-            //String html = "<html><head><title>Simple Http Server</title></head><body><h1>Simple Java HTTP Server</h1></body></html>";
-            //final String crlf = "\n\r";
-            //String response = "HTTP/1.1 200 OK" + crlf +
-            //        "Content-Length: " + html.getBytes().length + crlf +
-            //        crlf +
-            //        html +
-            //        crlf + crlf;
-            //outputStream.write(response.getBytes());
-
-            //this line block is new
-
             try {
                  HttpRequest httpRequest = httpParser.parseHttpRequest(inputStream);
                 String requestTarget = httpRequest.getRequestTarget();
                 byte [] body= webRootHandler.getFileByteArray(requestTarget);
                 String contentType = webRootHandler.getFileMimeType(requestTarget);
-                sendResponse(outputStream,contentType,body);
+                sendResponse(outputStream,httpRequest,contentType,body);
             }
             catch (ReadFileException e){
                LOGGER.error("Read file Exception on webroot handler",e);
@@ -101,16 +87,17 @@ public class HttpConnectionWorker extends Thread{
             LOGGER.error("error while senging response", e);
         }
     }
+    //dynamicResponse
     public void sendResponse(OutputStream outputStream, HttpRequest httpRequest, String contentType, byte[] body) throws IOException {
         try {
             final String crlf = "\n\r";
 
-            // Get HTTP version dynamically
-            String version = httpRequest.getBestVersion().toString(); // Assume getVersion() returns the version string
-            String statusCode = "200"; // Example: Use HttpStatusCode enum for status
-            String statusMessage = "OK"; // Get status message from enum
 
-            // Construct headers dynamically
+            String version = httpRequest.getBestVersion().toString();
+            String statusCode = "200";
+            String statusMessage = "OK";
+
+
             String headers = version + " " + statusCode + " " + statusMessage + crlf +
                     "Content-Type: " + contentType + crlf +
                     "Content-Length: " + body.length + crlf +
