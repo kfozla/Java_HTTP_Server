@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +28,7 @@ public class HttpParser {
         } catch (IOException e){
             throw new RuntimeException(e);
         }
-        parseBody(inputStreamReader,httpRequest);
+        //parseBody(inputStreamReader,httpRequest);
 
         return httpRequest;
     }
@@ -52,6 +51,8 @@ public class HttpParser {
                     } catch (BadHttpVersionException e) {
                         throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
                     }
+                    LOGGER.info("Request Line Version to Process Complete");
+
                     return;
                 }else {
                     throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
@@ -62,10 +63,12 @@ public class HttpParser {
                     LOGGER.debug("Request Line Method to Process:{}", processingDataBuffer.toString());
                     httpRequest.setMethod(processingDataBuffer.toString());
                     methodParsed=true;
+                    LOGGER.info("Request Line Method to Process Complete");
                 } else if (!requestTargetParsed) {
                     LOGGER.debug("Request Line Target to Process:{}", processingDataBuffer.toString());
                     httpRequest.setRequestTarget(processingDataBuffer.toString());
                     requestTargetParsed=true;
+                    LOGGER.info("Request Line Target to Process Complete");
                 } else {
                     throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
                 }
@@ -81,33 +84,65 @@ public class HttpParser {
             }
         }
     }
+
+    //private void parseHeaders(InputStreamReader inputStreamReader, HttpRequest httpRequest) throws IOException, HttpParsingException {
+    //    LOGGER.info("Starting Parsing Header");
+    //    int bit;
+    //    StringBuilder processingDataBuffer = new StringBuilder();
+    //    boolean crlfFound = false;
+    //    while ((bit = inputStreamReader.read()) >=0){
+    //        LOGGER.info("while iteration");
+    //        if (bit == CR){
+    //            bit= inputStreamReader.read();
+    //            if (bit == LF){
+    //                if (!crlfFound){
+    //                    crlfFound=true;
+    //
+    //                    processSingleHeaderField(processingDataBuffer, httpRequest);
+    // Two CRLF received, end of headers.//                    processingDataBuffer.delete(0,processingDataBuffer.length());
+    // Exit the loop after processing the last header//                }else{
+    //                    //Two crlf received, end of header
+    //                }
+    //            else {
+    //                throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+    //            }
+    //        }
+    // Process header data//        else{
+    //            crlfFound=false;
+    //            processingDataBuffer.append((char) bit);
+    //            //TODO APPEND BUFFER
+    //        }
+    //    }
+    //    LOGGER.info("Parsing header finished");
+    //}
     private void parseHeaders(InputStreamReader inputStreamReader, HttpRequest httpRequest) throws IOException, HttpParsingException {
+        LOGGER.info("Starting Parsing Header");
         int bit;
         StringBuilder processingDataBuffer = new StringBuilder();
         boolean crlfFound = false;
-        while ((bit = inputStreamReader.read()) >=0){
-            if (bit == CR){
-                bit= inputStreamReader.read();
-                if (bit == LF){
-                    if (!crlfFound){
-                        crlfFound=true;
+        while ((bit = inputStreamReader.read()) >= 0) {
 
+            if (bit == CR) {
+                bit = inputStreamReader.read();
+                if (bit == LF) {
+                    if (!crlfFound) {
+                        crlfFound = true;
                         processSingleHeaderField(processingDataBuffer, httpRequest);
-                        processingDataBuffer.delete(0,processingDataBuffer.length());
-                    }else{
-                        //Two crlf received, end of header
+                        processingDataBuffer.delete(0, processingDataBuffer.length());
+                    } else {
+
+                        break;
                     }
+                } else {
+                    throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);//            }
                 }
-                else {
-                    throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
-                }
-            }
-            else{
-                crlfFound=false;
+            } else {
+                crlfFound = false;
                 processingDataBuffer.append((char) bit);
-                //TODO APPEND BUFFER
+
             }
         }
+        LOGGER.info("Parsing header finished");
     }
 
     private void processSingleHeaderField(StringBuilder processingDataBuffer, HttpRequest httpRequest) throws HttpParsingException {

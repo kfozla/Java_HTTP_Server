@@ -1,5 +1,7 @@
 package com.kfozla.httpserver.core;
 
+import com.kfozla.http.HttpParser;
+import com.kfozla.httpserver.core.io.WebRootHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,9 +14,13 @@ public class ServerListener extends Thread{
     private int port;
     private String webSocket;
     private ServerSocket serverSocket;
-    public  ServerListener(int port, String webSocket) throws IOException {
+    private WebRootHandler webRootHandler;
+    private HttpParser httpParser;
+    public  ServerListener(int port, String webSocket, WebRootHandler webRootHandler, HttpParser httpParser) throws IOException {
         this.port=port;
         this.webSocket=webSocket;
+        this.webRootHandler=webRootHandler;
+        this.httpParser=httpParser;
 
         serverSocket = new ServerSocket(this.port);
     }
@@ -24,7 +30,7 @@ public class ServerListener extends Thread{
             while(serverSocket.isBound() && !serverSocket.isClosed()) {
                 Socket socket = serverSocket.accept();
                 LOGGER.info(" Connection Accepted: " + socket.getInetAddress());
-                HttpConnectionWorker worker = new HttpConnectionWorker(socket);
+                HttpConnectionWorker worker = new HttpConnectionWorker(socket,webRootHandler,httpParser);
                 worker.start();
             }
         } catch (IOException e) {
