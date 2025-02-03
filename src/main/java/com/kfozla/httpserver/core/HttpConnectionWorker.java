@@ -90,10 +90,10 @@ public class HttpConnectionWorker extends Thread{
     //dynamicResponse
     public void sendResponse(OutputStream outputStream, HttpRequest httpRequest, String contentType, byte[] body) throws IOException {
         try {
-            final String crlf = "\n\r";
+            final String crlf = "\r\n";
 
 
-            String version = httpRequest.getBestVersion().toString();
+            String version = httpRequest.getOriginalHttpVersion();
             String statusCode = "200";
             String statusMessage = "OK";
 
@@ -106,6 +106,7 @@ public class HttpConnectionWorker extends Thread{
             outputStream.write(headers.getBytes(StandardCharsets.US_ASCII));
             outputStream.write(body);
             outputStream.flush();
+            LOGGER.info("HTTP Version:"+httpRequest.getOriginalHttpVersion());
         } catch (IOException e) {
             LOGGER.error("Error while sending response", e);
         }
