@@ -28,8 +28,13 @@ public class HttpParser {
         } catch (IOException e){
             throw new RuntimeException(e);
         }
-        //parseBody(inputStreamReader,httpRequest);
-
+        if (httpRequest.getMethod().toString().equals("POST") ||httpRequest.getMethod().toString().equals("PUT")){
+            try {
+                parseBody(inputStreamReader,httpRequest);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         return httpRequest;
     }
     private void parseRequestLine(InputStreamReader inputStreamReader, HttpRequest httpRequest) throws IOException, HttpParsingException {
@@ -159,6 +164,30 @@ public class HttpParser {
         }
     }
 
-    private void parseBody(InputStreamReader inputStreamReader, HttpRequest httpRequest) {
+    private void parseBody(InputStreamReader inputStreamReader, HttpRequest httpRequest) throws HttpParsingException,IOException {
+        LOGGER.info("Starting Parsing Body");
+        int bit;
+        int bytesRead=0;
+        int contentLength;
+        if(httpRequest.getHeader("Content-Length").isBlank()){
+            LOGGER.debug("Body with no content");
+            throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+        }
+        contentLength = Integer.parseInt(httpRequest.getHeader("Content-Length"));
+        StringBuilder processingDataBuffer = new StringBuilder();
+
+        //int contentLength = Integer.parseInt(httpRequest.getHeader("Content-Length"));
+        char[] buffer = new char[contentLength];
+        while (bytesRead < contentLength) {
+            int read = inputStreamReader.read(buffer, bytesRead, contentLength - bytesRead);
+            if (read == -1) {
+                break; // End of stream
+            }
+            bytesRead += read;
+        }
+        String body = new String(buffer, 0, bytesRead);
+        httpRequest.setBody(body);
+        LOGGER.info("RequestBody: "+httpRequest.getBody());
+
     }
 }

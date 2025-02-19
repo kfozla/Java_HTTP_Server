@@ -10,6 +10,7 @@ public class HttpRequest extends HttpMessage{
     private String originalHttpVersion;//literal form
     private HttpVersion bestVersion;
     private HashMap<String,String> headers = new HashMap<>();
+    private String body;
     HttpRequest(){
     }
 
@@ -26,6 +27,7 @@ public class HttpRequest extends HttpMessage{
     public String getOriginalHttpVersion(){
         return originalHttpVersion;
     }
+    public String getBody(){return body;}
 
     void setMethod(String methodName) throws HttpParsingException {
         for (HttpMethod httpMethod : HttpMethod.values()){
@@ -50,6 +52,9 @@ public class HttpRequest extends HttpMessage{
         if (this.bestVersion == null){
             throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_505_HTTP_VERSION_NOT_SUPPORTED);
         }
+    }
+    void setBody(String body){
+        this.body=body;
     }
      void addHeader(String headerName,String headerField){
         headers.put(headerName,headerField);

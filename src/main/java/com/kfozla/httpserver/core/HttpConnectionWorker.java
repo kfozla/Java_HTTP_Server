@@ -8,6 +8,7 @@ import com.kfozla.httpserver.core.io.WebRootHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,6 +44,10 @@ public class HttpConnectionWorker extends Thread{
                LOGGER.error("Read file Exception on webroot handler",e);
             } catch (HttpParsingException e) {
                 throw new RuntimeException("parser exception",e);
+            }
+            catch (FileNotFoundException e){
+                LOGGER.warn("Requested File Not Found");
+                sendFileNotFoundResponse(outputStream);
             }
             LOGGER.info("Connection processing finished");
         } catch (IOException e) {
@@ -109,6 +114,22 @@ public class HttpConnectionWorker extends Thread{
             LOGGER.info("HTTP Version:"+httpRequest.getOriginalHttpVersion());
         } catch (IOException e) {
             LOGGER.error("Error while sending response", e);
+        }
+    }
+    public void sendFileNotFoundResponse(OutputStream outputStream) throws IOException {
+        String body ="<html><head><title>404 Not Found</title></head><body><h1>404 - File Not Found</h1></body></html>";
+        try {
+            final String crlf = "\n\r";
+            String headers = "HTTP/1.1 200 OK" + crlf +
+                    "Content-Type: " + "text/html" + crlf +
+                    "Content-Length: " + body.length() + crlf +
+                    "Connection: close" + crlf + crlf;
+            outputStream.write(headers.getBytes(StandardCharsets.US_ASCII));
+            outputStream.write(body.getBytes());
+            outputStream.flush();
+        }
+        catch (IOException e) {
+            LOGGER.error("error while senging response", e);
         }
     }
 

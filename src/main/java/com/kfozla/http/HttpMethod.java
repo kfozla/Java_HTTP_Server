@@ -1,7 +1,7 @@
 package com.kfozla.http;
 
 public enum HttpMethod {
-    GET, HEAD;
+    GET, HEAD, POST, PUT;
     public static final int MAX_LENGTH;
 
     static {
