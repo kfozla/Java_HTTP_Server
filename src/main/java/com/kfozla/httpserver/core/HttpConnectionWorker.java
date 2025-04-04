@@ -89,7 +89,7 @@ public class HttpConnectionWorker extends Thread{
             outputStream.flush();
         }
         catch (IOException e) {
-            LOGGER.error("error while senging response", e);
+            LOGGER.error("error while sending response", e);
         }
     }
     //dynamicResponse
@@ -129,7 +129,7 @@ public class HttpConnectionWorker extends Thread{
             outputStream.flush();
         }
         catch (IOException e) {
-            LOGGER.error("error while senging response", e);
+            LOGGER.error("error while sending response", e);
         }
     }
 
